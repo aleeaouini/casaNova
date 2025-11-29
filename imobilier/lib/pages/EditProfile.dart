@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'profile.dart';
 import '../widgets/app_drawer.dart';
 import 'about.dart';
+import 'map_page.dart';
 
 
 class EditProfile extends StatefulWidget {
@@ -91,7 +92,7 @@ class _EditProfileState extends State<EditProfile> {
     try {
       var request = http.MultipartRequest(
         "PUT",
-        Uri.parse("http://192.168.1.187:5000/auth/profile/${widget.user['id']}"),
+        Uri.parse("http://192.168.185.146:5000/auth/profile/${widget.user['id']}"),
       );
 
       request.fields['firstName'] = firstNameCtrl.text;
@@ -144,30 +145,62 @@ class _EditProfileState extends State<EditProfile> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-       drawer: AppDrawer(
-    onItemSelected: (index) {
-      Navigator.pop(context); // close drawer
+      drawer: AppDrawer(
+        user: widget.user, // ← correction ici
+        onItemSelected: (index) {
+  Navigator.pop(context); // fermer le drawer
+  switch (index) {
+    case 0:
+      Navigator.pushNamed(context, "/home");
+      break;
+    case 1:
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => ProfilePage(user: widget.user)),
+      );
+      break;
+    case 2:
+      Navigator.pushNamed(context, "/settings");
+      break;
+    case 3:
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => MapPage(user: widget.user)),
+      );
+      break;
+    case 4:
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => AboutPage(user: widget.user)),
+      );
+      break;
+    case 5:
+      // Gestion logout ici
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text("Déconnexion"),
+          content: const Text("Êtes-vous sûr ?"),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text("Annuler")),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context); // ferme le dialogue
+                Navigator.pop(context); // revient à la page précédente
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
+              child: const Text("Déconnexion", style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
+      break;
+  }
+},
 
-      if (index == 0) {
-        Navigator.pushNamed(context, "/home");
-      } else if (index == 1) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ProfilePage(user: widget.user),
-          ),
-        );
-      } else if (index == 2) {
-        Navigator.pushNamed(context, "/setting");
-      }
-      else if (index == 3) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => AboutPage(user: widget.user)),
-            );
-          }
-    },
-  ),
+      ),
+
+
       appBar: AppBar(
         title: const Text(
           "Modifier le profil",
