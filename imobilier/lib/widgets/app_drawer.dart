@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:imobilier/pages/profile.dart';
+import 'package:imobilier/pages/about.dart';
+import 'package:imobilier/pages/map_page.dart';
 
 class AppDrawer extends StatelessWidget {
   final Function(int) onItemSelected;
+  final Map<String, dynamic> user;
 
-  const AppDrawer({Key? key, required this.onItemSelected}) : super(key: key);
+  const AppDrawer({Key? key, required this.onItemSelected, required this.user}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -13,10 +17,7 @@ class AppDrawer extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Colors.orange.shade50,
-              Colors.white,
-            ],
+            colors: [Colors.orange.shade50, Colors.white],
           ),
         ),
         child: ListView(
@@ -24,11 +25,7 @@ class AppDrawer extends StatelessWidget {
           children: [
             DrawerHeader(
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Colors.orange, Colors.deepOrange],
-                ),
+                gradient: LinearGradient(colors: [Colors.orange, Colors.deepOrange]),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.orange.withOpacity(0.3),
@@ -56,119 +53,46 @@ class AppDrawer extends StatelessWidget {
                       color: Colors.white,
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
                     ),
                   ),
                 ],
               ),
             ),
-
-            SizedBox(height: 10),
-
-            _buildDrawerItem(
-              context,
-              icon: Icons.home_rounded,
-              title: "Home",
-              index: 0,
-            ),
-
-            _buildDrawerItem(
-              context,
-              icon: Icons.person_rounded,
-              title: "Profile",
-              index: 1,
-            ),
-
-            _buildDrawerItem(
-              context,
-              icon: Icons.settings_rounded,
-              title: "Settings",
-              index: 2,
-            ),
-
+            _buildDrawerItem(context, icon: Icons.home_rounded, title: "Home", index: 0),
+            _buildDrawerItem(context, icon: Icons.person_rounded, title: "Profile", index: 1),
+            _buildDrawerItem(context, icon: Icons.settings_rounded, title: "Settings", index: 2),
             Divider(height: 30, thickness: 1, indent: 20, endIndent: 20),
-
-            /// ⭐ NEW MAP MENU ITEM
-            _buildDrawerItem(
-              context,
-              icon: Icons.map_rounded,
-              title: "Map",
-              index: 5,
-            ),
-
-            _buildDrawerItem(
-              context,
-              icon: Icons.info_rounded,
-              title: "About",
-              index: 3,
-            ),
-
-            _buildDrawerItem(
-              context,
-              icon: Icons.logout_rounded,
-              title: "Logout",
-              index: 4,
-              isDestructive: true,
-            ),
+            _buildDrawerItem(context, icon: Icons.map_rounded, title: "Map", index: 3),
+            _buildDrawerItem(context, icon: Icons.info_rounded, title: "About", index: 4),
+            _buildDrawerItem(context, icon: Icons.logout_rounded, title: "Logout", index: 5, isDestructive: true),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDrawerItem(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required int index,
-    bool isDestructive = false,
-  }) {
+  Widget _buildDrawerItem(BuildContext context,
+      {required IconData icon, required String title, required int index, bool isDestructive = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: Colors.transparent,
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isDestructive ? Colors.red.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: isDestructive ? Colors.red : Colors.orange),
         ),
-        child: ListTile(
-          leading: Container(
-            padding: EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: isDestructive
-                  ? Colors.red.withOpacity(0.1)
-                  : Colors.orange.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              icon,
-              color: isDestructive ? Colors.red : Colors.orange,
-              size: 24,
-            ),
-          ),
-          title: Text(
-            title,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: isDestructive ? Colors.red : Colors.grey.shade800,
-            ),
-          ),
-          trailing: Icon(
-            Icons.arrow_forward_ios,
-            size: 16,
-            color: Colors.grey.shade400,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          onTap: () {
-            Navigator.pop(context);
-            onItemSelected(index);
-          },
-          hoverColor: isDestructive
-              ? Colors.red.withOpacity(0.05)
-              : Colors.orange.withOpacity(0.05),
+        title: Text(
+          title,
+          style: TextStyle(color: isDestructive ? Colors.red : Colors.grey.shade800),
         ),
+        trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade400),
+        onTap: () {
+          Navigator.pop(context);
+          onItemSelected(index);
+        },
       ),
     );
   }
