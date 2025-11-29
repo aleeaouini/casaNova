@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../widgets/app_drawer.dart';
 import 'about.dart';
+import 'map_page.dart';
 class ProfilePage extends StatefulWidget {
   final Map<String, dynamic> user;
 
@@ -26,7 +27,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> reloadUser() async {
     try {
       final response = await http.get(
-        Uri.parse("http://192.168.180.146:5000/auth/profile/${user['id']}"),
+        Uri.parse("http://192.168.185.146:5000/auth/profile/${user['id']}"),
       );
 
       if (response.statusCode == 200) {
@@ -71,26 +72,41 @@ class _ProfilePageState extends State<ProfilePage> {
 
       // 👉 Drawer added here
       drawer: AppDrawer(
-        onItemSelected: (index) {
-          Navigator.pop(context); // close drawer
+  user: user,
+  onItemSelected: (index) {
+    Navigator.pop(context);
+    switch (index) {
+      case 0:
+        Navigator.pushNamed(context, "/home");
+        break;
+      case 1:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => ProfilePage(user: user)),
+        );
+        break;
+      case 2:
+        Navigator.pushNamed(context, "/settings");
+        break;
+      case 3:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => MapPage(user: user)),
+        );
+        break;
+      case 4:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => AboutPage(user: user)),
+        );
+        break;
+      case 5:
+        _logout(); // si tu veux gérer logout ici
+        break;
+    }
+  },
+),
 
-          if (index == 0) Navigator.pushNamed(context, "/home");
-          if (index == 1) {
-              if (ModalRoute.of(context)?.settings.name != "/profile") {
-                Navigator.pushNamed(context, "/profile");
-              }
-          }
-
-          if (index == 2) Navigator.pushNamed(context, "/settings");
-          if (index == 3) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) =>  AboutPage(user: user)),
-            );
-          }
-
-        },
-      ),
 
       appBar: AppBar(
         title: const Text("Profil",

@@ -22,6 +22,7 @@ class AboutPage extends StatelessWidget {
         elevation: 0,
       ),
       drawer: AppDrawer(
+        user: user, // ← Obligatoire !
         onItemSelected: (index) {
           Navigator.pop(context); // fermer le drawer
 
@@ -31,7 +32,7 @@ class AboutPage extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ProfilePage(user: user), // ← passe le user ici
+                builder: (context) => ProfilePage(user: user), // passe le user ici
               ),
             );
           }
@@ -40,6 +41,7 @@ class AboutPage extends StatelessWidget {
           if (index == 4) Navigator.pop(context); // Logout, à gérer selon ton app
         },
       ),
+
       body: SingleChildScrollView(
         child: Column(
           children: [

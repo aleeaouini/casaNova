@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:imobilier/pages/signup.dart';
-import 'package:imobilier/pages/map_page.dart';   
+import './pages/map_page.dart';
+import './pages/profile.dart';
+import './pages/about.dart';
+import './pages/signup.dart';
 
 void main() {
   runApp(const MyApp());
 }
+
+// Simule l'état de connexion
+bool isLoggedIn = false;
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -16,16 +21,28 @@ class MyApp extends StatelessWidget {
       title: 'Immobilier',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
-        useMaterial3: true,
       ),
-
-      /// First page when app opens
-      home: const SignupPage(),
-
-      /// App Navigation Routes
+      initialRoute: isLoggedIn ? "/home" : "/signup",
       routes: {
-        "/map": (context) => const MapPage(),   
+        "/signup": (context) => const SignupPage(),
+        "/home": (context) => const MapPageWrapper(),
+        "/profile": (context) => ProfilePage(user: {}),
+        "/map": (context) => const MapPageWrapper(),
+        "/about": (context) => AboutPage(user: {}),
       },
     );
+  }
+}
+
+class MapPageWrapper extends StatelessWidget {
+  const MapPageWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isLoggedIn) {
+      Future.microtask(() => Navigator.pushReplacementNamed(context, "/signup"));
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    return MapPage(user: {});
   }
 }
