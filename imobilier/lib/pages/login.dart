@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'home.dart';
 import 'profile.dart';
 import 'signup.dart';
 
@@ -29,7 +30,7 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       var response = await http.post(
-        Uri.parse("http://192.168.185.146:5000/auth/login"),
+        Uri.parse("http://192.168.1.221:5000/auth/login"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "email": _email.text.trim(),
@@ -44,7 +45,7 @@ class _LoginPageState extends State<LoginPage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => ProfilePage(user: resBody['user']),
+            builder: (_) => HomeScreen(user: resBody['user']),
           ),
         );
       } else {
