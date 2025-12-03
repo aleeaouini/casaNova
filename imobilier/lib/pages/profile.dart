@@ -27,7 +27,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> reloadUser() async {
     try {
       final response = await http.get(
-        Uri.parse("http://192.168.185.146:5000/auth/profile/${user['id']}"),
+        Uri.parse("http://192.168.1.222:5000/auth/profile/${user['id']}"),
       );
 
       if (response.statusCode == 200) {
