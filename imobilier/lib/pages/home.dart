@@ -5,6 +5,8 @@ import 'createCart.dart';
 import 'listpage.dart';
 import 'profile.dart';
 import 'favorites.dart'; // Add this import
+import 'map_page.dart';
+import 'package:imobilier/widgets/PropertyMapPage.dart';
 
 // =================== MODEL ===================
 class Property {
@@ -57,7 +59,7 @@ class Property {
   int get hashCode => id.hashCode;
 }
 
-const String apiUrl = "http://192.168.1.221:5000/properties";
+const String apiUrl = "http://192.168.185.146:5000/properties";
 
 Future<List<Property>> fetchProperties({String? category}) async {
   final uri = category != null && category != 'Tous'
@@ -502,6 +504,33 @@ class PropertyCard extends StatelessWidget {
                         style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                       ),
                     ),
+                    const SizedBox(width: 10),
+                    // --- MAP BUTTON ---
+ ElevatedButton.icon(
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PropertyMapPage(
+          address: property.address, // Pass only the address
+        ),
+      ),
+    );
+  },
+  icon: const Icon(Icons.map_outlined, size: 20),
+  label: const Text("Map"),
+  style: ElevatedButton.styleFrom(
+    backgroundColor: Colors.blueGrey.shade800,
+    foregroundColor: Colors.white,
+    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+  ),
+),
+
+
+
+
+
                   ],
                 ),
               ],
