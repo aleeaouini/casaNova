@@ -47,20 +47,20 @@ It includes authentication, an interactive map, favorites management, user profi
 
 ## 📸 Screenshots
 
-![Landing Page](immobilier/assets/landing.jpg)  
-![Landing Page PNG](immobilier/assets/landing.png)  
-![Home Page](immobilier/assets/home.jpg)  
-![Property 1](immobilier/assets/img1.jpg)  
-![Property 2](immobilier/assets/img2.jpg)  
-![Property 3](immobilier/assets/img3.jpg)  
-![Property 4](immobilier/assets/img4.jpg)  
-![About Page](immobilier/assets/about.jpg)  
-![Edit Property](immobilier/assets/edit.jpg)  
-![Login Page](immobilier/assets/login.jpg)  
-![Signup Page](immobilier/assets/signup.jpg)  
-![Map Page](immobilier/assets/map.png)  
-![Menu](immobilier/assets/menu.jpg)  
-![Logo](immobilier/assets/logo.png)  
+![Landing Page](imobilier/assets/landing.jpg)  
+![Landing Page PNG](imobilier/assets/landing.png)  
+![Home Page](imobilier/assets/home.jpg)  
+![Property 1](imobilier/assets/img1.jpg)  
+![Property 2](imobilier/assets/img2.jpg)  
+![Property 3](imobilier/assets/img3.jpg)  
+![Property 4](imobilier/assets/img4.jpg)  
+![About Page](imobilier/assets/about.jpg)  
+![Edit Property](imobilier/assets/edit.jpg)  
+![Login Page](imobilier/assets/login.jpg)  
+![Signup Page](imobilier/assets/signup.jpg)  
+![Map Page](imobilier/assets/map.png)  
+![Menu](imobilier/assets/menu.jpg)  
+![Logo](imobilier/assets/logo.png)  
 
 ---
 
