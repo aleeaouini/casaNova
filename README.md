@@ -1,4 +1,4 @@
-# 📱 Real Estate Mobile App – Flutter + Node.js
+#  Real Estate Mobile App 
 
 ## 🏡 Description
 This mobile application allows users to search, view, and publish real estate listings.  
@@ -47,17 +47,62 @@ It includes authentication, an interactive map, favorites management, user profi
 
 ## 📸 Screenshots
 
-![Landing Page](imobilier/assets/landing.jpg)  
-![Landing Page PNG](imobilier/assets/landing.png)  
-![Home Page](imobilier/assets/home.jpg)   
-![About Page](imobilier/assets/about.jpg)  
-![Edit Property](imobilier/assets/edit.jpg)  
-![Login Page](imobilier/assets/login.jpg)  
-![Signup Page](imobilier/assets/signup.jpg)  
-![Map Page](imobilier/assets/map.png)  
-![Menu](imobilier/assets/menu.jpg)  
+<p align="center">
+  <img src="imobilier/assets/landing.jpg" alt="Landing Page" width="300"/>
+  <br/>
+  Landing Page
+</p>
 
----
+<p align="center">
+  <img src="imobilier/assets/landing.png" alt="Landing Page PNG" width="300"/>
+  <br/>
+  Landing Page PNG
+</p>
 
-## 📂 Project Structure
+<p align="center">
+  <img src="imobilier/assets/home.jpg" alt="Home Page" width="300"/>
+  <br/>
+  Home Page
+</p>
 
+<p align="center">
+  <img src="imobilier/assets/about.jpg" alt="About Page" width="300"/>
+  <br/>
+  About Page
+</p>
+
+<p align="center">
+  <img src="imobilier/assets/edit.jpg" alt="Edit Property" width="300"/>
+  <br/>
+  Edit Property
+</p>
+
+<p align="center">
+  <img src="imobilier/assets/login.jpg" alt="Login Page" width="300"/>
+  <br/>
+  Login Page
+</p>
+
+<p align="center">
+  <img src="imobilier/assets/signup.jpg" alt="Signup Page" width="300"/>
+  <br/>
+  Signup Page
+</p>
+
+<p align="center">
+  <img src="imobilier/assets/map.png" alt="Map Page" width="300"/>
+  <br/>
+  Map Page
+</p>
+
+<p align="center">
+  <img src="imobilier/assets/menu.jpg" alt="Menu" width="300"/>
+  <br/>
+  Menu
+</p>
+
+<p align="center">
+  <img src="imobilier/assets/logo.png" alt="Logo" width="200"/>
+  <br/>
+  Logo
+</p>
