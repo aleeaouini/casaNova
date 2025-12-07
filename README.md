@@ -1,4 +1,4 @@
-#  Real Estate Mobile App 
+# 📱 Real Estate Mobile App 
 
 ## 🏡 Description
 This mobile application allows users to search, view, and publish real estate listings.  
@@ -47,62 +47,30 @@ It includes authentication, an interactive map, favorites management, user profi
 
 ## 📸 Screenshots
 
+### User Authentication & Edit
 <p align="center">
-  <img src="imobilier/assets/landing.jpg" alt="Landing Page" width="300"/>
+  <img src="imobilier/assets/login.jpg" alt="Login Page" width="200"/>
+  <img src="imobilier/assets/signup.jpg" alt="Signup Page" width="200"/>
+  <img src="imobilier/assets/edit.jpg" alt="Edit Property" width="200"/>
   <br/>
-  Landing Page
+  Login & Signup & Edit Property
 </p>
 
+### Home, Menu, About & Map
 <p align="center">
-  <img src="imobilier/assets/landing.png" alt="Landing Page PNG" width="300"/>
+  <img src="imobilier/assets/home.jpg" alt="Home Page" width="200"/>
+  <img src="imobilier/assets/menu.jpg" alt="Menu" width="200"/>
+  <img src="imobilier/assets/about.jpg" alt="About Page" width="200"/>
+  <img src="imobilier/assets/map.png" alt="Map Page" width="200"/>
   <br/>
-  Landing Page PNG
+  Home & Menu & About & Map
 </p>
 
+### Landing & Logo
 <p align="center">
-  <img src="imobilier/assets/home.jpg" alt="Home Page" width="300"/>
-  <br/>
-  Home Page
-</p>
-
-<p align="center">
-  <img src="imobilier/assets/about.jpg" alt="About Page" width="300"/>
-  <br/>
-  About Page
-</p>
-
-<p align="center">
-  <img src="imobilier/assets/edit.jpg" alt="Edit Property" width="300"/>
-  <br/>
-  Edit Property
-</p>
-
-<p align="center">
-  <img src="imobilier/assets/login.jpg" alt="Login Page" width="300"/>
-  <br/>
-  Login Page
-</p>
-
-<p align="center">
-  <img src="imobilier/assets/signup.jpg" alt="Signup Page" width="300"/>
-  <br/>
-  Signup Page
-</p>
-
-<p align="center">
-  <img src="imobilier/assets/map.png" alt="Map Page" width="300"/>
-  <br/>
-  Map Page
-</p>
-
-<p align="center">
-  <img src="imobilier/assets/menu.jpg" alt="Menu" width="300"/>
-  <br/>
-  Menu
-</p>
-
-<p align="center">
+  <img src="imobilier/assets/landing.jpg" alt="Landing Page" width="200"/>
+  <img src="imobilier/assets/landing.png" alt="Landing Page PNG" width="200"/>
   <img src="imobilier/assets/logo.png" alt="Logo" width="200"/>
   <br/>
-  Logo
+  Landing Page & Landing PNG & Logo
 </p>
