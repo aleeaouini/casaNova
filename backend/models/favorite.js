@@ -1,0 +1,30 @@
+const mongoose = require('mongoose');
+
+const FavoriteSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'User ID is required'],
+    },
+
+    propertyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Property',
+      required: [true, 'Property ID is required'],
+    },
+
+    addedAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+// Empêcher les doublons
+FavoriteSchema.index({ userId: 1, propertyId: 1 }, { unique: true });
+
+module.exports = mongoose.model('Favorite', FavoriteSchema);

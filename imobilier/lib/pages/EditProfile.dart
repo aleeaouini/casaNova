@@ -92,7 +92,7 @@ class _EditProfileState extends State<EditProfile> {
     try {
       var request = http.MultipartRequest(
         "PUT",
-        Uri.parse("http://192.168.185.146:5000/auth/profile/${widget.user['id']}"),
+        Uri.parse("http://172.20.10.2:5000/auth/profile/${widget.user['id']}"),
       );
 
       request.fields['firstName'] = firstNameCtrl.text;

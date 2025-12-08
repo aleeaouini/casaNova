@@ -5,7 +5,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 
 class AddPropertyPage extends StatefulWidget {
-  const AddPropertyPage({super.key});
+  final Map<String, dynamic>? user; // Add user parameter
+  
+  const AddPropertyPage({super.key, this.user});
 
   @override
   State<AddPropertyPage> createState() => _AddPropertyPageState();
@@ -72,7 +74,7 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
       try {
         var req = http.MultipartRequest(
           "POST",
-          Uri.parse(uploadApi), // Fixed: Using the defined uploadApi constant
+          Uri.parse(uploadApi),
         );
 
         req.files.add(await http.MultipartFile.fromPath("image", img.path));
@@ -95,13 +97,27 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
   }
 
   Future<void> submitListing() async {
+    // Validation
     if (titleCtrl.text.isEmpty ||
         descriptionCtrl.text.isEmpty ||
         addressCtrl.text.isEmpty ||
         priceCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Veuillez remplir tous les champs'),
+        const SnackBar(
+          content: Text('Veuillez remplir tous les champs'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Check if user is logged in
+    final userId = widget.user?['id']?.toString() ?? widget.user?['_id']?.toString();
+    
+    if (userId == null || userId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vous devez être connecté pour ajouter une propriété'),
           backgroundColor: Colors.red,
         ),
       );
@@ -114,10 +130,11 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
       // Upload photos
       List<String> photoUrls = await uploadImages();
 
+      // Build property data with owner
       final Map<String, dynamic> data = {
-        "title": titleCtrl.text,
-        "description": descriptionCtrl.text,
-        "address": addressCtrl.text,
+        "title": titleCtrl.text.trim(),
+        "description": descriptionCtrl.text.trim(),
+        "address": addressCtrl.text.trim(),
         "pricePerNight": int.parse(priceCtrl.text),
         "bedrooms": bedrooms,
         "bathrooms": bathrooms,
@@ -127,13 +144,14 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
             .toList(),
         "photos": photoUrls,
         "category": selectedCategory,
+        "userId": userId, // Add the owner/user ID
       };
 
-      print("Sending data to: $propertiesApi"); // Debug
+      print("Sending data to: $propertiesApi");
       print("Data: $data");
 
       final response = await http.post(
-        Uri.parse(propertiesApi), // Fixed: Using the defined propertiesApi constant
+        Uri.parse(propertiesApi),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(data),
       );
@@ -143,21 +161,32 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
 
       setState(() => _isLoading = false);
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 201 || response.statusCode == 200) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Propriété ajoutée avec succès!'),
+            const SnackBar(
+              content: Text('Propriété ajoutée avec succès!'),
               backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
             ),
           );
-          Navigator.pop(context, true);
+          
+          // Wait a bit to show the success message
+          await Future.delayed(const Duration(milliseconds: 500));
+          
+          if (mounted) {
+            Navigator.pop(context, true); // Return true to indicate success
+          }
         }
       } else {
+        final errorBody = jsonDecode(response.body);
+        final errorMessage = errorBody['message'] ?? errorBody['error'] ?? 'Erreur inconnue';
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Erreur: ${response.statusCode} - ${response.body}"),
+            content: Text("Erreur: $errorMessage"),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
           ),
         );
       }
@@ -166,8 +195,9 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
       print("Submit error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Erreur réseau: $e"),
+          content: Text("Erreur réseau: ${e.toString()}"),
           backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
         ),
       );
     }
@@ -186,7 +216,7 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Add Your Property',
+          'Ajouter une propriété',
           style: TextStyle(
             color: Colors.black87,
             fontWeight: FontWeight.bold,
@@ -203,7 +233,7 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Step $currentStep of $totalSteps',
+                  'Étape $currentStep sur $totalSteps',
                   style: TextStyle(
                     fontSize: 13,
                     color: Colors.grey.shade600,
@@ -226,38 +256,38 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Property Details
-                  _buildSectionTitle('Property Details'),
+                  _buildSectionTitle('Détails de la propriété'),
                   const SizedBox(height: 16),
                   _buildTextField(
                     controller: titleCtrl,
-                    label: 'Listing Title',
-                    hint: 'e.g., Cozy Beachfront Cottage',
+                    label: 'Titre de l\'annonce',
+                    hint: 'ex: Magnifique villa avec vue mer',
                   ),
                   const SizedBox(height: 20),
                   _buildTextField(
                     controller: descriptionCtrl,
                     label: 'Description',
-                    hint: 'Tell guests about your place...',
+                    hint: 'Décrivez votre propriété...',
                     maxLines: 4,
                   ),
                   const SizedBox(height: 32),
 
                   // Location
-                  _buildSectionTitle('Location'),
+                  _buildSectionTitle('Localisation'),
                   const SizedBox(height: 16),
                   _buildTextField(
                     controller: addressCtrl,
-                    label: 'Address',
-                    hint: 'Enter the property address',
+                    label: 'Adresse',
+                    hint: 'Entrez l\'adresse de la propriété',
                   ),
                   const SizedBox(height: 32),
 
                   // Pricing
-                  _buildSectionTitle('Pricing & Specs'),
+                  _buildSectionTitle('Prix et caractéristiques'),
                   const SizedBox(height: 16),
                   _buildTextField(
                     controller: priceCtrl,
-                    label: 'Price per night',
+                    label: 'Prix par nuit',
                     hint: '150',
                     keyboardType: TextInputType.number,
                     prefixText: "\$ ",
@@ -269,7 +299,7 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
                     children: [
                       Expanded(
                         child: _buildCounter(
-                          label: 'Bedrooms',
+                          label: 'Chambres',
                           value: bedrooms,
                           onIncrement: () => setState(() => bedrooms++),
                           onDecrement: () =>
@@ -279,7 +309,7 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: _buildCounter(
-                          label: 'Bathrooms',
+                          label: 'Salles de bain',
                           value: bathrooms,
                           onIncrement: () => setState(() => bathrooms++),
                           onDecrement: () =>
@@ -291,7 +321,7 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
                   const SizedBox(height: 32),
 
                   // Category
-                  _buildSectionTitle('Category'),
+                  _buildSectionTitle('Catégorie'),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: selectedCategory,
@@ -319,7 +349,7 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
                   const SizedBox(height: 32),
 
                   // Amenities
-                  _buildSectionTitle('Amenities'),
+                  _buildSectionTitle('Équipements'),
                   const SizedBox(height: 16),
                   Wrap(
                     spacing: 12,
@@ -346,16 +376,23 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
+                        disabledBackgroundColor: primaryColor.withOpacity(0.6),
                       ),
                       child: _isLoading
-                          ? const CircularProgressIndicator(
-                              color: Colors.white,
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
                             )
                           : const Text(
-                              "Submit Listing",
+                              "Publier l'annonce",
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                     ),
@@ -390,7 +427,7 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
       children: [
         Text(label,
             style: const TextStyle(
-                fontSize: 14, fontWeight: FontWeight.w600)),
+                fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87)),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
@@ -401,12 +438,17 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
             filled: true,
             fillColor: Colors.grey.shade50,
             hintText: hint,
+            hintStyle: TextStyle(color: Colors.grey.shade400),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: primaryColor, width: 2),
             ),
           ),
         ),
@@ -425,7 +467,7 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
       children: [
         Text(label,
             style: const TextStyle(
-                fontSize: 14, fontWeight: FontWeight.w600)),
+                fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87)),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
@@ -434,7 +476,10 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
               border: Border.all(color: Colors.grey.shade300)),
           child: Row(
             children: [
-              IconButton(icon: const Icon(Icons.remove), onPressed: onDecrement),
+              IconButton(
+                icon: Icon(Icons.remove, color: primaryColor),
+                onPressed: onDecrement,
+              ),
               Expanded(
                 child: Center(
                   child: Text("$value",
@@ -442,7 +487,10 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
                           fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
-              IconButton(icon: const Icon(Icons.add), onPressed: onIncrement),
+              IconButton(
+                icon: Icon(Icons.add, color: primaryColor),
+                onPressed: onIncrement,
+              ),
             ],
           ),
         ),
@@ -470,7 +518,8 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
             const SizedBox(width: 8),
             Text(a.label,
                 style: TextStyle(
-                    color: a.isSelected ? Colors.white : Colors.black87)),
+                    color: a.isSelected ? Colors.white : Colors.black87,
+                    fontWeight: FontWeight.w500)),
           ],
         ),
       ),
@@ -526,15 +575,17 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
             decoration: BoxDecoration(
               color: Colors.grey.shade50,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.shade300),
+              border: Border.all(color: Colors.grey.shade300, style: BorderStyle.solid),
             ),
             child: Column(
               children: [
                 Icon(Icons.add_photo_alternate_outlined,
                     size: 48, color: Colors.grey.shade400),
                 const SizedBox(height: 8),
-                Text("Add more",
-                    style: TextStyle(color: Colors.grey.shade600)),
+                Text("Ajouter des photos",
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
+                Text("(${selectedPhotos.length} sélectionnée${selectedPhotos.length > 1 ? 's' : ''})",
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
               ],
             ),
           ),

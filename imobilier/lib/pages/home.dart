@@ -8,7 +8,39 @@ import 'favorites.dart'; // Add this import
 import 'map_page.dart';
 import 'package:imobilier/widgets/PropertyMapPage.dart';
 
-// =================== MODEL ===================
+// =================== OWNER MODEL ===================
+class Owner {
+  final String id;
+  final String firstName;
+  final String lastName;
+  final String email;
+  final String? phone;
+  final String? photo;
+
+  Owner({
+    required this.id,
+    required this.firstName,
+    required this.lastName,
+    required this.email,
+    this.phone,
+    this.photo,
+  });
+
+  factory Owner.fromJson(Map<String, dynamic> json) {
+    return Owner(
+      id: json['_id']?.toString() ?? '',
+      firstName: json['firstName']?.toString() ?? '',
+      lastName: json['lastName']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+      phone: json['phone']?.toString(),
+      photo: json['photo']?.toString(),
+    );
+  }
+
+  String get fullName => '$firstName $lastName';
+}
+
+// =================== PROPERTY MODEL ===================
 class Property {
   final String id;
   final String title;
@@ -20,6 +52,7 @@ class Property {
   final List<String> amenities;
   final List<String> photos;
   final String category;
+  final Owner? owner;
 
   Property({
     required this.id,
@@ -32,24 +65,56 @@ class Property {
     required this.amenities,
     required this.photos,
     required this.category,
+    this.owner,
   });
 
   factory Property.fromJson(Map<String, dynamic> json) {
+    // Ensure photos is always a List<String>
+    List<String> photoList = [];
+    if (json['photos'] != null) {
+      if (json['photos'] is List) {
+        photoList = List<String>.from(json['photos'].map((x) => x?.toString() ?? ''));
+      }
+    }
+    
     return Property(
-      id: json['_id'],
-      title: json['title'],
-      description: json['description'],
-      address: json['address'],
-      pricePerNight: json['pricePerNight'],
-      bedrooms: json['bedrooms'] ?? 1,
-      bathrooms: json['bathrooms'] ?? 1,
+      id: json['_id']?.toString() ?? '',
+      title: json['title']?.toString() ?? 'Sans titre',
+      description: json['description']?.toString() ?? 'Pas de description',
+      address: json['address']?.toString() ?? 'Adresse non disponible',
+      pricePerNight: (json['pricePerNight'] as num?)?.toInt() ?? 0,
+      bedrooms: (json['bedrooms'] as num?)?.toInt() ?? 1,
+      bathrooms: (json['bathrooms'] as num?)?.toInt() ?? 1,
       amenities: List<String>.from(json['amenities'] ?? []),
-      photos: List<String>.from(json['photos'] ?? []),
-      category: json['category'] ?? 'Autre',
+      photos: photoList,
+      category: json['category']?.toString() ?? 'Autre',
+      owner: json['owner'] != null ? Owner.fromJson(json['owner']) : null,
     );
   }
 
-  // Override equals and hashCode for proper comparison
+  Map<String, dynamic> toJson() {
+    return {
+      '_id': id,
+      'title': title,
+      'description': description,
+      'address': address,
+      'pricePerNight': pricePerNight,
+      'bedrooms': bedrooms,
+      'bathrooms': bathrooms,
+      'amenities': amenities,
+      'photos': photos,
+      'category': category,
+      'owner': owner != null ? {
+        '_id': owner!.id,
+        'firstName': owner!.firstName,
+        'lastName': owner!.lastName,
+        'email': owner!.email,
+        'phone': owner!.phone,
+        'photo': owner!.photo,
+      } : null,
+    };
+  }
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -61,17 +126,115 @@ class Property {
 
 const String apiUrl = "http://192.168.185.146:5000/properties";
 
-Future<List<Property>> fetchProperties({String? category}) async {
-  final uri = category != null && category != 'Tous'
-      ? Uri.parse("$apiUrl/category/$category")
-      : Uri.parse(apiUrl);
+// Helper function to get image URL
+String getImageUrl(String? imagePath) {
+  if (imagePath == null || imagePath.isEmpty) {
+    return "https://via.placeholder.com/400x200.png?text=No+Image";
+  }
+  
+  // If it's already a full URL, return it
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath;
+  }
+  
+  // If it starts with uploads/, assume it's already the full path
+  if (imagePath.startsWith('uploads/')) {
+    return '$apiUrl/$imagePath';
+  }
+  
+  // Otherwise, assume it's just a filename and prepend the uploads path
+  return '$apiUrl/uploads/$imagePath';
+}
 
-  final response = await http.get(uri);
-  if (response.statusCode == 200) {
-    final List data = jsonDecode(response.body);
-    return data.map((json) => Property.fromJson(json)).toList();
-  } else {
-    throw Exception("Failed to fetch properties");
+// =================== FAVORITES API ===================
+Future<List<Property>> fetchFavorites(String userId) async {
+  try {
+    if (userId.isEmpty) return [];
+    
+    final response = await http.get(
+      Uri.parse('$apiUrl/favorites/$userId'),
+      headers: {'Content-Type': 'application/json'},
+    );
+    
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      return data.map((json) => Property.fromJson(json)).toList();
+    } else {
+      print('Failed to fetch favorites: ${response.statusCode}');
+      print('Response body: ${response.body}');
+      return [];
+    }
+  } catch (e) {
+    print('Error fetching favorites: $e');
+    return [];
+  }
+}
+
+Future<bool> addFavorite(String userId, String propertyId) async {
+  try {
+    if (userId.isEmpty || propertyId.isEmpty) return false;
+    
+    final response = await http.post(
+      Uri.parse('$apiUrl/favorites'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'userId': userId,
+        'propertyId': propertyId,
+      }),
+    );
+    
+    return response.statusCode == 201 || response.statusCode == 200;
+  } catch (e) {
+    print('Error adding favorite: $e');
+    return false;
+  }
+}
+
+Future<bool> removeFavorite(String userId, String propertyId) async {
+  try {
+    if (userId.isEmpty || propertyId.isEmpty) return false;
+    
+    final response = await http.delete(
+      Uri.parse('$apiUrl/favorites/$userId/$propertyId'),
+      headers: {'Content-Type': 'application/json'},
+    );
+    
+    return response.statusCode == 200;
+  } catch (e) {
+    print('Error removing favorite: $e');
+    return false;
+  }
+}
+
+// =================== FETCH PROPERTIES ===================
+Future<List<Property>> fetchProperties({String? category}) async {
+  try {
+    final propertiesUrl = "$apiUrl/properties";
+    final uri = category != null && category != 'Tous'
+        ? Uri.parse("$propertiesUrl/category/$category")
+        : Uri.parse(propertiesUrl);
+
+    print('Fetching properties from: $uri');
+    final response = await http.get(uri);
+    
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      print('Fetched ${data.length} properties');
+      
+      // Debug: print first property's photos
+      if (data.isNotEmpty) {
+        print('First property photos: ${data[0]['photos']}');
+      }
+      
+      return data.map((json) => Property.fromJson(json)).toList();
+    } else {
+      print('Failed to fetch properties: ${response.statusCode}');
+      print('Response body: ${response.body}');
+      throw Exception("Failed to fetch properties: ${response.statusCode}");
+    }
+  } catch (e) {
+    print('Error in fetchProperties: $e');
+    return [];
   }
 }
 
@@ -92,12 +255,36 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<String> categories = ['Tous', 'Appartement', 'Maison', 'Villa'];
 
   late Future<List<Property>> futureProperties;
-  List<Property> favoriteProperties = []; // Track favorite properties
+  List<Property> favoriteProperties = [];
+  bool _isLoadingFavorites = false;
 
   @override
   void initState() {
     super.initState();
     futureProperties = fetchProperties();
+    _loadFavorites();
+  }
+
+  Future<void> _loadFavorites() async {
+    final userId = widget.user['id']?.toString() ?? widget.user['_id']?.toString() ?? '';
+    if (userId.isEmpty) return;
+    
+    setState(() {
+      _isLoadingFavorites = true;
+    });
+    
+    try {
+      final favorites = await fetchFavorites(userId);
+      setState(() {
+        favoriteProperties = favorites;
+      });
+    } catch (e) {
+      print('Error loading favorites: $e');
+    } finally {
+      setState(() {
+        _isLoadingFavorites = false;
+      });
+    }
   }
 
   void selectCategory(int index) {
@@ -109,24 +296,98 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void toggleFavorite(Property property) {
-    setState(() {
-      if (favoriteProperties.contains(property)) {
-        favoriteProperties.remove(property);
+  Future<void> toggleFavorite(Property property) async {
+    final userId = widget.user['id']?.toString() ?? widget.user['_id']?.toString() ?? '';
+    if (userId.isEmpty || property.id.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Impossible d\'ajouter aux favoris'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+    
+    try {
+      if (isFavorite(property)) {
+        // Supprimer des favoris
+        final success = await removeFavorite(userId, property.id);
+        if (success) {
+          setState(() {
+            favoriteProperties.removeWhere((p) => p.id == property.id);
+          });
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Retiré des favoris'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
       } else {
-        favoriteProperties.add(property);
+        // Ajouter aux favoris
+        final success = await addFavorite(userId, property.id);
+        if (success) {
+          setState(() {
+            favoriteProperties.add(property);
+          });
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Ajouté aux favoris !'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
       }
-    });
+    } catch (e) {
+      print('Error toggling favorite: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
-  void removeFavorite(Property property) {
-    setState(() {
-      favoriteProperties.remove(property);
-    });
+  Future<void> removeFavoriteFromDatabase(Property property) async {
+    final userId = widget.user['id']?.toString() ?? widget.user['_id']?.toString() ?? '';
+    if (userId.isEmpty || property.id.isEmpty) return;
+    
+    try {
+      final success = await removeFavorite(userId, property.id);
+      if (success) {
+        setState(() {
+          favoriteProperties.removeWhere((p) => p.id == property.id);
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Retiré des favoris'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error removing favorite: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   bool isFavorite(Property property) {
-    return favoriteProperties.contains(property);
+    return favoriteProperties.any((p) => p.id == property.id);
   }
 
   Widget _buildNavItem(IconData icon, IconData activeIcon, String label, int index) {
@@ -144,13 +405,15 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             );
           } else if (label == 'Favoris') {
+            final userId = widget.user['id']?.toString() ?? widget.user['_id']?.toString() ?? '';
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => FavoritesPage(
                   favoriteProperties: favoriteProperties,
                   primaryColor: primaryColor,
-                  onRemoveFavorite: removeFavorite,
+                  onRemoveFavorite: removeFavoriteFromDatabase,
+                  userId: userId,
                 ),
               ),
             );
@@ -178,6 +441,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Get user photo URL
+    final userPhoto = widget.user['photo'];
+    final userPhotoUrl = userPhoto != null ? getImageUrl(userPhoto.toString()) : null;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -207,10 +474,10 @@ class _HomeScreenState extends State<HomeScreen> {
               child: CircleAvatar(
                 backgroundColor: Colors.orange.shade200,
                 radius: 20,
-                backgroundImage: widget.user['photo'] != null
-                    ? NetworkImage('http://192.168.1.221:5000/uploads/${widget.user['photo']}')
+                backgroundImage: userPhotoUrl != null
+                    ? NetworkImage(userPhotoUrl) as ImageProvider
                     : null,
-                child: widget.user['photo'] == null
+                child: userPhotoUrl == null
                     ? const Icon(Icons.person, color: Colors.white, size: 24)
                     : null,
               ),
@@ -308,15 +575,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   return const Center(child: Text('Aucune propriété trouvée'));
                 } else {
                   final properties = snapshot.data!;
+                  print('Displaying ${properties.length} properties');
                   return ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     itemCount: properties.length,
                     itemBuilder: (context, index) {
+                      final property = properties[index];
                       return PropertyCard(
-                        property: properties[index],
+                        property: property,
                         primaryColor: primaryColor,
-                        isFavorite: isFavorite(properties[index]),
-                        onFavoriteToggle: () => toggleFavorite(properties[index]),
+                        isFavorite: isFavorite(property),
+                        onFavoriteToggle: () => toggleFavorite(property),
                       );
                     },
                   );
@@ -327,11 +596,22 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          final result = await Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => AddPropertyPage()),
+            MaterialPageRoute(
+              builder: (_) => AddPropertyPage(user: widget.user),
+            ),
           );
+          
+          // Refresh properties if a new property was added
+          if (result == true) {
+            setState(() {
+              futureProperties = fetchProperties(
+                category: categories[_selectedCategory],
+              );
+            });
+          }
         },
         backgroundColor: primaryColor,
         child: const Icon(Icons.add, color: Colors.white, size: 28),
@@ -341,13 +621,30 @@ class _HomeScreenState extends State<HomeScreen> {
         color: Colors.white,
         shape: const CircularNotchedRectangle(),
         notchMargin: 6,
-        child: Container(
+        child: SizedBox(
           height: 65,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildNavItem(Icons.home_outlined, Icons.home, 'Accueil', 0),
-              _buildNavItem(Icons.favorite_border, Icons.favorite, 'Favoris', 1),
+              Stack(
+                children: [
+                  _buildNavItem(Icons.favorite_border, Icons.favorite, 'Favoris', 1),
+                  if (_isLoadingFavorites)
+                    Positioned(
+                      top: 2,
+                      right: 20,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Colors.orange,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
               const SizedBox(width: 48),
               _buildNavItem(Icons.message_outlined, Icons.message, 'Messages', 2),
               _buildNavItem(Icons.person_outline, Icons.person, 'Profil', 3),
@@ -376,9 +673,13 @@ class PropertyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = property.photos.isNotEmpty
-        ? property.photos[0]
+    // Get the first photo or use placeholder
+    final imageUrl = property.photos.isNotEmpty 
+        ? getImageUrl(property.photos[0])
         : "https://via.placeholder.com/400x200.png?text=No+Image";
+
+    print('PropertyCard - Image URL: $imageUrl');
+    print('PropertyCard - Photos array: ${property.photos}');
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
@@ -407,11 +708,20 @@ class PropertyCard extends StatelessWidget {
                   width: double.infinity,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
+                    print('Error loading image: $imageUrl, Error: $error');
                     return Container(
                       height: 200,
                       color: Colors.grey.shade200,
-                      child: const Center(
-                        child: Icon(Icons.home, size: 50, color: Colors.grey),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Image non disponible',
+                            style: TextStyle(color: Colors.grey.shade600),
+                          ),
+                        ],
                       ),
                     );
                   },
@@ -419,7 +729,15 @@ class PropertyCard extends StatelessWidget {
                     if (loadingProgress == null) return child;
                     return Container(
                       height: 200,
-                      child: const Center(child: CircularProgressIndicator()),
+                      color: Colors.grey.shade100,
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          value: loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded / 
+                                loadingProgress.expectedTotalBytes!
+                              : null,
+                        ),
+                      ),
                     );
                   },
                 ),
@@ -465,6 +783,8 @@ class PropertyCard extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 8),
                 Row(
@@ -475,6 +795,8 @@ class PropertyCard extends StatelessWidget {
                       child: Text(
                         property.address,
                         style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -492,7 +814,17 @@ class PropertyCard extends StatelessWidget {
                       ),
                     ),
                     OutlinedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ReservationPage(
+                              property: property,
+                              primaryColor: primaryColor,
+                            ),
+                          ),
+                        );
+                      },
                       style: OutlinedButton.styleFrom(
                         foregroundColor: primaryColor,
                         side: BorderSide(color: primaryColor),
